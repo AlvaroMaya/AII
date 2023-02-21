@@ -66,16 +66,93 @@ def almacenar_bd():
 #“Listar Jornadas”, que muestre en otra ventana (en una listbox con scrollbar) los
 #resultados de los partidos de todas las jornadas, extrayéndolos de la BD.
 def listar_jornadas():
+    #creacion de la ventana
+    v = Toplevel()
+    sc = Scrollbar(v)
+    sc.pack(side=RIGHT, fill=Y)
+    lb = Listbox(v, width=150, yscrollcommand=sc.set)
+    #parte de la base de datos
     conn=sqlite3.connect('futbol.db')
     conn.text_factory = str
-    cursor = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
-    #print(str(cursor.fetchall()[0]))
-    for row in cursor: #en row[0] tenemos el nombre de nuestras jornadas
+    jornadas = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
+    for row in jornadas: #en row[0] tenemos el nombre de nuestras jornadas
         #print(row[0])
         jornada = row[0]
+        #agregamos la jornada a nuestro texto
+        lb.insert(END, jornada)
+        lb.insert(END, "-----------------------------------------------------")
         #toca terminar la parte de listar
+        cursor = conn.execute('''SELECT EQUIPO_LOCAL,EQUIPO_VISITANTE,RESULTADO_LOCAL, RESULTADO_VISITANTE
+                               FROM FUTBOL WHERE JORNADA LIKE ?''', (jornada,))
+        for fila in cursor:
+            equipo_local = fila[0]
+            equipo_vis   = fila[1]
+            res_local    = fila[2]
+            res_vis      = fila[3] 
+            #el cast de str es necesario para pasar los numeros a string y meterlo en el texto
+            texto = equipo_local + " " +str(res_local) +"-"+str(res_vis) +" " +equipo_vis
+            #print(texto)
+            
+            lb.insert(END,texto)
         
-    
+        #insertamos un salto de linea al final del ultimo resultado, para una mejor lectura
+        lb.insert(END, "\n\n")
+       # lista_de_jornadas(cursor,jornada)
+    conn.close
+    lb.pack(side=LEFT, fill=BOTH)
+    sc.config(command=lb.yview)
+
+def buscar_jornada():
+    def imprimir_jornada():
+        s = numeritos.get()
+        #me voy a extraer jornada porque alli hago toda la extraccion de datos
+        lista_res=extraer_jornada(s)
+        v = Toplevel()
+        sc = Scrollbar(v)
+        sc.pack(side=RIGHT, fill=Y)
+        lb = Listbox(v, width=150, yscrollcommand=sc.set)
+        lb.insert(END, "Jornada "+s)
+        lb.insert(END, "-----------------------------------------------------")
+        for res in lista_res:
+            lb.insert(END,res)
+        lb.pack(side=LEFT,fill=BOTH)
+        sc.config(command=lb.yview)
+    conn=sqlite3.connect('futbol.db')
+    conn.text_factory = str
+    partidos = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
+    jornadas = partidos.fetchall()
+    conn.close
+    #hay que hacer 2 ventanas nuevas, para el entry y otra para el texto de resultado
+    v = Toplevel()
+    label = Label(v,text="Introduzca numero de la jornada: ")
+    label.pack(side=LEFT)
+    x = str
+    var=StringVar()
+    numeritos = Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas), command=imprimir_jornada,wrap=True)
+    var.set(0)
+    numeritos.pack(side=LEFT)
+
+
+
+def extraer_jornada(jornada):
+    jornada_ext = "Jornada "+jornada
+    print(jornada_ext)
+    conn = sqlite3.connect('futbol.db')
+    cursor = conn.execute('''SELECT EQUIPO_LOCAL,EQUIPO_VISITANTE,RESULTADO_LOCAL, RESULTADO_VISITANTE
+                               FROM FUTBOL WHERE JORNADA LIKE ?''', (jornada_ext,))
+    lista_res = list()
+    for fila in cursor:
+        equipo_local = fila[0]
+        equipo_vis   = fila[1]
+        res_local    = fila[2]
+        res_vis      = fila[3] 
+            #el cast de str es necesario para pasar los numeros a string y meterlo en el texto
+        texto = str(equipo_local + " " +str(res_local) +"-"+str(res_vis) +" " +equipo_vis)
+        lista_res.append(texto)
+    print(lista_res[0])
+    conn.close
+    #devuelvo la lista con el texto
+    return lista_res
 
 def ventana_principal():
     top = Tk()
@@ -88,8 +165,8 @@ def ventana_principal():
     #resultados.place(x=0,y=100)
     jornadas=Button(top,text="Listar jornadas",command=listar_jornadas)
     jornadas.pack(side=TOP)
-    buscar_jornada=Button(top,text="Buscar jornada")
-    buscar_jornada.pack(side=TOP)
+    buscar_jorn=Button(top,text="Buscar jornada",command=buscar_jornada)
+    buscar_jorn.pack(side=TOP)
     estadisticas=Button(top,text="Estadisticas jornada")
     estadisticas.pack(side=TOP)
     top.mainloop()
