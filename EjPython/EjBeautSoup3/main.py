@@ -81,20 +81,11 @@ def listar_jornadas():
         #agregamos la jornada a nuestro texto
         lb.insert(END, jornada)
         lb.insert(END, "-----------------------------------------------------")
-        #toca terminar la parte de listar
-        cursor = conn.execute('''SELECT EQUIPO_LOCAL,EQUIPO_VISITANTE,RESULTADO_LOCAL, RESULTADO_VISITANTE
-                               FROM FUTBOL WHERE JORNADA LIKE ?''', (jornada,))
-        for fila in cursor:
-            equipo_local = fila[0]
-            equipo_vis   = fila[1]
-            res_local    = fila[2]
-            res_vis      = fila[3] 
-            #el cast de str es necesario para pasar los numeros a string y meterlo en el texto
-            texto = equipo_local + " " +str(res_local) +"-"+str(res_vis) +" " +equipo_vis
-            #print(texto)
-            
-            lb.insert(END,texto)
-        
+        #sacamos el numerito del texto para llamar a la funcion
+        s = jornada[8:]
+        lista_res=extraer_jornada(s)
+        for res in lista_res:
+            lb.insert(END,res)
         #insertamos un salto de linea al final del ultimo resultado, para una mejor lectura
         lb.insert(END, "\n\n")
        # lista_de_jornadas(cursor,jornada)
@@ -133,6 +124,35 @@ def buscar_jornada():
     numeritos.pack(side=LEFT)
 
 
+def estadistica_jornada():
+    def imprimir_jornada():
+        s = numeritos.get()
+        #me voy a extraer jornada porque alli hago toda la extraccion de datos
+        stats=estadisticas(s)
+        print(stats)
+        v = Toplevel()
+        sc = Scrollbar(v)
+        sc.pack(side=RIGHT, fill=Y)
+        lb = Listbox(v, width=150, yscrollcommand=sc.set)
+        lb.insert(END, "Jornada "+s)
+        lb.insert(END, "-----------------------------------------------------")
+        lb.insert(END,stats)
+        lb.pack(side=LEFT,fill=BOTH)
+        sc.config(command=lb.yview)
+    conn=sqlite3.connect('futbol.db')
+    conn.text_factory = str
+    partidos = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
+    jornadas = partidos.fetchall()
+    conn.close
+    #hay que hacer 2 ventanas nuevas, para el entry y otra para el texto de resultado
+    v = Toplevel()
+    label = Label(v,text="Introduzca numero de la jornada: ")
+    label.pack(side=LEFT)
+    x = str
+    var=StringVar()
+    numeritos = Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas), command=imprimir_jornada,wrap=True)
+    var.set(0)
+    numeritos.pack(side=LEFT)
 
 def extraer_jornada(jornada):
     jornada_ext = "Jornada "+jornada
@@ -149,10 +169,33 @@ def extraer_jornada(jornada):
             #el cast de str es necesario para pasar los numeros a string y meterlo en el texto
         texto = str(equipo_local + " " +str(res_local) +"-"+str(res_vis) +" " +equipo_vis)
         lista_res.append(texto)
-    print(lista_res[0])
     conn.close
     #devuelvo la lista con el texto
     return lista_res
+
+def estadisticas(jornada):
+    jornada_ext = "Jornada "+jornada
+    print(jornada_ext)
+    conn = sqlite3.connect('futbol.db')
+    cursor = conn.execute('''SELECT RESULTADO_LOCAL, RESULTADO_VISITANTE
+                               FROM FUTBOL WHERE JORNADA LIKE ?''', (jornada_ext,))
+    tot_goles=0
+    empate=0
+    vic_local=0
+    vic_vis=0
+    for fila in cursor:
+        res_local=int(fila[0])
+        res_vis  =int(fila[1])
+        tot_goles+=res_local+res_vis
+        if res_vis == res_local:
+            empate+=1
+        elif res_local>res_vis:
+            vic_local +=1
+        else:
+            vic_vis+=1
+    texto = "TOTAL GOLES JORNADA: "+str(tot_goles)+"\n\n\t Empates: "+str(empate)+"\n\t Victoria local: "+str(vic_local)+"\n\t Victoria visitante: "+str(vic_vis)
+    return texto
+
 
 def ventana_principal():
     top = Tk()
@@ -167,7 +210,7 @@ def ventana_principal():
     jornadas.pack(side=TOP)
     buscar_jorn=Button(top,text="Buscar jornada",command=buscar_jornada)
     buscar_jorn.pack(side=TOP)
-    estadisticas=Button(top,text="Estadisticas jornada")
+    estadisticas=Button(top,text="Estadisticas jornada",command=estadistica_jornada)
     estadisticas.pack(side=TOP)
     top.mainloop()
     
