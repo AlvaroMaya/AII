@@ -58,7 +58,24 @@ def almacenar_bd():
             (jornada,equipo_local,equipo_visitante,res_local, res_visitante,link))
             print("Comiteando cambio")
             conn.commit()
-        conn.close
+        cursor = conn.execute("SELECT COUNT(*) FROM FUTBOL")
+        messagebox.showinfo("Base Datos",
+                            "Base de datos creada correctamente \nHay " + str(cursor.fetchone()[0]) + " registros")
+        conn.close()
+
+#“Listar Jornadas”, que muestre en otra ventana (en una listbox con scrollbar) los
+#resultados de los partidos de todas las jornadas, extrayéndolos de la BD.
+def listar_jornadas():
+    conn=sqlite3.connect('futbol.db')
+    conn.text_factory = str
+    cursor = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
+    #print(str(cursor.fetchall()[0]))
+    for row in cursor: #en row[0] tenemos el nombre de nuestras jornadas
+        #print(row[0])
+        jornada = row[0]
+        #toca terminar la parte de listar
+        
+    
 
 def ventana_principal():
     top = Tk()
@@ -69,7 +86,7 @@ def ventana_principal():
     resultados = Button(top, text="Almacenar resultados", command=almacenar_bd)
     resultados.pack(side=TOP)
     #resultados.place(x=0,y=100)
-    jornadas=Button(top,text="Listar jornadas")
+    jornadas=Button(top,text="Listar jornadas",command=listar_jornadas)
     jornadas.pack(side=TOP)
     buscar_jornada=Button(top,text="Buscar jornada")
     buscar_jornada.pack(side=TOP)

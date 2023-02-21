@@ -56,10 +56,57 @@ def extraer_elementos():
        #print("Comiteando cambio")
        conn.commit()
     print("Se termino la descarga")
-    conn.close
+   
+    cursor = conn.execute("SELECT COUNT(*) FROM PELICULA")
+    messagebox.showinfo("Base Datos",
+                        "Base de datos creada correctamente \nHay " + str(cursor.fetchone()[0]) + " registros")
+    conn.close()
+
+def buscar_por_titulo():  
+    def listar(event):
+            conn = sqlite3.connect('peliculas.db')
+            conn.text_factory = str
+            cursor = conn.execute("SELECT TITULO, PAIS, DIRECTOR FROM PELICULA WHERE TITULO LIKE '%" + str(entry.get()) + "%'")
+            conn.close
+            listar_peliculas(cursor)
+    ventana = Toplevel()
+    label = Label(ventana, text="Introduzca cadena a buscar ")
+    label.pack(side=LEFT)
+    entry = Entry(ventana)
+    entry.bind("<Return>", listar)
+    entry.pack(side=LEFT)
+
+def listar_peliculas(cursor):      
+    v = Toplevel()
+    sc = Scrollbar(v)
+    sc.pack(side=RIGHT, fill=Y)
+    lb = Listbox(v, width=150, yscrollcommand=sc.set)
+    for row in cursor:
+        s = 'TÍTULO: ' + row[0]
+        lb.insert(END, s)
+        lb.insert(END, "------------------------------------------------------------------------")
+        s = "     PAÍS: " + str(row[1]) + ' | DIRECTOR: ' + row[2]
+        lb.insert(END, s)
+        lb.insert(END,"\n\n")
+    lb.pack(side=LEFT, fill=BOTH)
+    sc.config(command=lb.yview)
 
 
-
+def listar_peliculas_1(cursor):
+    v = Toplevel()
+    sc = Scrollbar(v)
+    sc.pack(side=RIGHT, fill=Y)
+    lb = Listbox(v, width=150, yscrollcommand=sc.set)
+    for row in cursor:
+        s = 'TÍTULO: ' + row[0]
+        lb.insert(END, s)
+        lb.insert(END, "-----------------------------------------------------")
+        fecha = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")  #sqlite almacena las fechas como str
+        s = "     FECHA DE ESTRENO: " + datetime.strftime(fecha,"%d/%m/%Y")
+        lb.insert(END, s)
+        lb.insert(END, "\n\n")
+    lb.pack(side=LEFT, fill=BOTH)
+    sc.config(command=lb.yview)
 
 def ventana_principal():
     top = Tk()
