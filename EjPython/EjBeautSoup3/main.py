@@ -129,13 +129,13 @@ def estadistica_jornada():
         s = numeritos.get()
         #me voy a extraer jornada porque alli hago toda la extraccion de datos
         stats=estadisticas(s)
-        print(stats)
+        #print(stats)
         v = Toplevel()
         sc = Scrollbar(v)
         sc.pack(side=RIGHT, fill=Y)
-        lb = Listbox(v, width=150, yscrollcommand=sc.set)
+        lb = Text(v, width=150, yscrollcommand=sc.set)
         lb.insert(END, "Jornada "+s)
-        lb.insert(END, "-----------------------------------------------------")
+        lb.insert(END, "\n-----------------------------------------------------")
         lb.insert(END,stats)
         lb.pack(side=LEFT,fill=BOTH)
         sc.config(command=lb.yview)
@@ -153,6 +153,8 @@ def estadistica_jornada():
     numeritos = Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas), command=imprimir_jornada,wrap=True)
     var.set(0)
     numeritos.pack(side=LEFT)
+def buscar_goles():
+    pass
 
 def extraer_jornada(jornada):
     jornada_ext = "Jornada "+jornada
@@ -193,7 +195,7 @@ def estadisticas(jornada):
             vic_local +=1
         else:
             vic_vis+=1
-    texto = "TOTAL GOLES JORNADA: "+str(tot_goles)+"\n\n\t Empates: "+str(empate)+"\n\t Victoria local: "+str(vic_local)+"\n\t Victoria visitante: "+str(vic_vis)
+    texto = "\n\tTOTAL GOLES JORNADA: "+str(tot_goles)+"\n\n\t Empates: "+str(empate)+"\n\t Victoria local: "+str(vic_local)+"\n\t Victoria visitante: "+str(vic_vis)
     return texto
 
 
@@ -212,6 +214,7 @@ def ventana_principal():
     buscar_jorn.pack(side=TOP)
     estadisticas=Button(top,text="Estadisticas jornada",command=estadistica_jornada)
     estadisticas.pack(side=TOP)
+    goles=Button(top,text="Buscar goles", command=buscar_goles)
     top.mainloop()
     
 
