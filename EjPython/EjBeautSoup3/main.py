@@ -150,11 +150,105 @@ def estadistica_jornada():
     label.pack(side=LEFT)
     x = str
     var=StringVar()
-    numeritos = Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas), command=imprimir_jornada,wrap=True)
+    numeritos = Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas),wrap=True)
+    numeritos.bind("<Return>", imprimir_jornada)
     var.set(0)
     numeritos.pack(side=LEFT)
+
+#buscamos los links con cada url necesaria para sacar los datos
 def buscar_goles():
-    pass
+    def sacar_equipos():
+        num_jornada=jornada.get()
+        str_jornada = "Jornada "+num_jornada
+        #print(str_jornada)
+        local = conn.execute("SELECT EQUIPO_LOCAL FROM FUTBOL WHERE JORNADA LIKE ?",(str_jornada,))
+        loc=local.fetchall()
+        #print(loc)
+        visitante = conn.execute("SELECT EQUIPO_VISITANTE FROM FUTBOL WHERE JORNADA LIKE ?",(str_jornada,))
+        vis=visitante.fetchall()
+        equipo_loc.config(value=loc)
+        equipo_vis.config(value=vis)
+    def imprime_goles():
+        num_jornada=jornada.get()
+        str_jornada = "Jornada "+num_jornada
+        equipo_local = equipo_loc.get()
+        equipo_visitante = equipo_vis.get()
+        #extraemos el link
+        link =  conn.execute('''SELECT LINK_DIRECTO FROM FUTBOL WHERE JORNADA LIKE ? 
+        AND EQUIPO_LOCAL LIKE ? AND EQUIPO_VISITANTE LIKE ?''',(str_jornada,equipo_local,equipo_visitante))
+        url = link.fetchone()
+        
+        if url:
+            #print(url[0])
+            detalles_goles(url)
+        else:
+            print("Te equivocaste wey")
+            messagebox.showwarning("Warning","Estos dos equipos no se enfrentaron en la jornada seleccionada")
+
+    conn=sqlite3.connect('futbol.db')
+    conn.text_factory = str
+    partidos = conn.execute("SELECT DISTINCT JORNADA FROM FUTBOL")
+    jornadas = partidos.fetchall()
+    
+    v = Toplevel()
+    label = Label(v,text="Selecccione jornada: ")
+    label.pack(side=LEFT)
+    x = str
+    var=StringVar()
+    jornada= Spinbox(v,textvariable=var, from_= 1 , to =len(jornadas),command=sacar_equipos, wrap=True)
+    var.set(0)
+    jornada.pack(side=LEFT)
+    equipo_loc = Spinbox(v, value=[],wrap=True)
+    label1 = Label(v,text="Selecccione equipo local: ")
+    label1.pack(side=LEFT)
+    equipo_loc.pack(side=LEFT)
+    equipo_vis = Spinbox(v,value=[],wrap=True)
+    label2 = Label(v,text="Selecccione equipo visitante: ")
+    label2.pack(side=LEFT)
+    equipo_vis.pack(side=LEFT)
+    button = Button(v,text="Buscar goles",command=imprime_goles)
+    button.pack(side=LEFT, padx= 10)
+
+def detalles_goles(url):
+    v = Toplevel()
+    msg = Text(v)
+    #print(url[0])
+    f = urllib.request.urlopen(url[0])
+    s = BeautifulSoup(f, "lxml")
+    #lista_jornadas=s.find_all("div",class_=["cont-modulo","resultados"])
+    #buscar en section->class=is-postgame
+    #para los locales:
+    seccion=s.find("section",class_=["is-postgame"])
+    #print(seccion)
+    datos_local = seccion.find("div",class_=["is-local"])
+    datos_visit = seccion.find("div",class_=["is-visitor"])
+    nombre_local=datos_local.find("span",class_=["name-large"]).string.strip()
+    nombre_visit=datos_visit.find("span",class_=["name-large"]).string.strip()
+    scorers_local = datos_local.find("div",class_=["scr-hdr__scorers"])
+    spans_loc= scorers_local.find_all("span")
+    texto=str 
+    for span in spans_loc:
+        if span.get("class"):
+            pass
+        else:
+            x = span.string.strip()
+            texto=nombre_local+": " +x+"\n"
+            msg.insert(END, texto)
+
+            print(x)
+    scorers_vis = datos_visit.find("div",class_=["scr-hdr__scorers"])
+    spans_vis= scorers_vis.find_all("span")
+    texto=str 
+    for span in spans_vis:
+        if span.get("class"):
+            pass
+        else:
+            x = span.string.strip()
+            texto=nombre_visit+": " +x+"\n"
+            msg.insert(END, texto)
+            print(x)
+    msg.pack()
+    #print(spans)
 
 def extraer_jornada(jornada):
     jornada_ext = "Jornada "+jornada
@@ -215,6 +309,7 @@ def ventana_principal():
     estadisticas=Button(top,text="Estadisticas jornada",command=estadistica_jornada)
     estadisticas.pack(side=TOP)
     goles=Button(top,text="Buscar goles", command=buscar_goles)
+    goles.pack(side=TOP)
     top.mainloop()
     
 
