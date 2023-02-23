@@ -142,7 +142,36 @@ def buscar_tematica():
     
 
 def buscar_complejidad():
-    pass
+    def juegos_por_complejidad(event):
+        w = Toplevel()
+        pantalla = Text(w)
+        complejidad = compl.get()
+        juegos = conn.execute('''SELECT TITULO, TEMATICAS, COMPLEJIDAD FROM JUEGOS WHERE COMPLEJIDAD LIKE ?'''
+                              ,(complejidad,)).fetchall()
+        #print(juegos)
+        for juego in juegos:
+            texto = "Título: "+juego[0]+", Temáticas: "+juego[1]+", Complejidad: "+juego[2] +"\n\n"
+            pantalla.insert(END,texto)
+        pantalla.pack(side=LEFT)
+        
+    #creacion del spinbox
+    conn=sqlite3.connect('juegos.db')
+    complejidades = conn.execute("SELECT DISTINCT COMPLEJIDAD FROM JUEGOS").fetchall()
+    #lista_temas sera el value del spinbox
+    lista_complejidad = list()
+    for complejidad in complejidades:
+        if complejidad not in lista_complejidad:
+            lista_complejidad.append(complejidad)
+        else:
+            pass
+    #print(lista_temas)
+    v = Toplevel()
+    label = Label(v,text="Selecccione complejidad: ")
+    label.pack(side=LEFT)
+    compl = Spinbox(v, value=lista_complejidad,wrap=True)
+    compl.bind("<Return>", juegos_por_complejidad)
+    compl.pack(side=LEFT)
+    
     
 
 
