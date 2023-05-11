@@ -73,7 +73,9 @@ def extraer_pelicula(url):
 def almacenar_datos():
     
     #define el esquema de la información
-    schem = Schema(titulo=TEXT(stored=True,phrase=False), titulo_original=TEXT(stored=True,phrase=False), pais=KEYWORD(stored=True,commas=True,lowercase=True), fecha=DATETIME(stored=True), director=KEYWORD(stored=True,commas=True,lowercase=True), generos=KEYWORD(stored=True,commas=True,lowercase=True), sinopsis=TEXT(stored=True,phrase=False), url=ID(stored=True,unique=True))
+    schem = Schema(titulo=TEXT(stored=True,phrase=False), titulo_original=TEXT(stored=True,phrase=False),
+     pais=KEYWORD(stored=True,commas=True,lowercase=True), fecha=DATETIME(stored=True),
+     director=KEYWORD(stored=True,commas=True,lowercase=True), generos=KEYWORD(stored=True,commas=True,lowercase=True), sinopsis=TEXT(stored=True,phrase=False), url=ID(stored=True,unique=True))
     
     #eliminamos el directorio del índice, si existe
     if os.path.exists("Index"):

@@ -1,0 +1,8 @@
+django-admin.exe startproject <nombreproyecto>
+Cambiar al directorio del nombreproyecto
+python .\manage.py startapp principal
+añadir en settings en installed apps, el principal previamente creado
+python .\manage.py makemigrations  
+python .\manage.py migrate 
+python .\manage.py runserver
+python .\manage.py createsuperuser
